@@ -64,14 +64,17 @@ const GetApiKey = () => {
 
       const response = await fetch('http://103.246.85.252:8000/process-image-and-store/', {
         method: 'POST',
-        body: formData
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Verification failed');
-      }
-
       const result = await response.json();
+      
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Verification failed');
+      }
       
       setIsVerifying(false);
       setIsLoading(true);
