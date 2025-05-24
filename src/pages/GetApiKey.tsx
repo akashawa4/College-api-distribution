@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -25,7 +24,6 @@ const GetApiKey = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if the user is logged in
     const token = localStorage.getItem("auth_token");
     setIsLoggedIn(!!token);
   }, []);
@@ -37,58 +35,50 @@ const GetApiKey = () => {
         setFile(selectedFile);
         setFileName(selectedFile.name);
       } else {
-        toast.error("Please upload an image file");
+        toast.error("Please upload an image file (JPG or PNG)");
       }
     }
   };
 
   const handleUploadClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
+    fileInputRef.current?.click();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!file) {
       toast.error("Please upload your student ID");
       return;
     }
 
     setIsVerifying(true);
-    
+
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file); // <-- Must match backend
 
-      const response = await fetch('http://103.246.85.252:8000/process-image-and-store/', {
-        method: 'POST',
+      const response = await fetch("http://103.246.85.252:8000/process-image-and-store/", {
+        method: "POST",
         body: formData,
         headers: {
-          'Accept': 'application/json'
-        }
+          Accept: "application/json",
+          // DO NOT set Content-Type — browser will auto-set it with correct boundary
+        },
+        // credentials: "include", // Uncomment if your backend requires cookies
       });
 
       const result = await response.json();
-      
+
       if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Verification failed');
+        throw new Error(result.message || "Verification failed");
       }
-      
+
       setIsVerifying(false);
       setIsLoading(true);
-      
-      // Store verification status
+
       localStorage.setItem("is_verified", "true");
-      
-      // Sample user data that would come from backend
-      const userData = {
-        name: "John Smith",
-        department: "Computer Engineering",
-      };
-      
-      // Generate a demo API key
+
       const apiKey = {
         id: "1",
         key: "sk_" + Math.random().toString(36).substring(2, 15),
@@ -96,14 +86,14 @@ const GetApiKey = () => {
         created: new Date(),
         requests: 0,
       };
-      
-      // Store the API key
+
       localStorage.setItem("api_keys", JSON.stringify([apiKey]));
-      
+
       toast.success("Identity verified successfully!");
       navigate("/dashboard");
-    } catch (error) {
-      toast.error("Verification failed. Please try again.");
+
+    } catch (error: any) {
+      toast.error(`Verification failed: ${error.message || "Unknown error"}`);
       setIsVerifying(false);
       setIsLoading(false);
     }
@@ -120,23 +110,17 @@ const GetApiKey = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                You need to be authenticated to verify your identity and get an API key. 
-                Please log in to your account or create a new one.
-              </p>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              You need to be authenticated to verify your identity and get an API key.
+              Please log in to your account or create a new one.
+            </p>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Link to="/login" className="w-full">
-              <Button className="w-full" type="button">
-                Log In
-              </Button>
+              <Button className="w-full" type="button">Log In</Button>
             </Link>
             <Link to="/signup" className="w-full">
-              <Button className="w-full" variant="outline" type="button">
-                Sign Up
-              </Button>
+              <Button className="w-full" variant="outline" type="button">Sign Up</Button>
             </Link>
           </CardFooter>
         </Card>
@@ -157,7 +141,7 @@ const GetApiKey = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="student-id">Student ID</Label>
-              <div 
+              <div
                 className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
                 onClick={handleUploadClick}
               >
@@ -174,34 +158,31 @@ const GetApiKey = () => {
                   {fileName ? fileName : "Click to upload your student ID card"}
                 </p>
                 <p className="text-xs text-muted-foreground text-center">
-                  Supported formats: JPG, PNG, PDF
+                  Supported formats: JPG, PNG
                 </p>
               </div>
             </div>
-            
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                We'll verify your student ID to ensure you're from D.Y. Patil College of Engineering.
-                Your API key will be generated after successful verification.
-              </p>
-            </div>
+
+            <p className="text-sm text-muted-foreground">
+              We'll verify your student ID to ensure you're from D.Y. Patil College of Engineering.
+              Your API key will be generated after successful verification.
+            </p>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button 
-              className="w-full" 
-              type="submit" 
+            <Button
+              className="w-full"
+              type="submit"
               disabled={isVerifying || isLoading || !file}
             >
-              {isVerifying ? "Verifying Identity..." : 
-               isLoading ? "Generating API Key..." : 
+              {isVerifying ? "Verifying Identity..." :
+               isLoading ? "Generating API Key..." :
                "Verify & Generate API Key"}
             </Button>
             <div className="text-center text-sm">
               <p>
                 By proceeding, you agree to our{" "}
-                <a className="text-primary hover:underline">Terms of Service</a>
-                {" "}and{" "}
-                <a className="text-primary hover:underline">Privacy Policy</a>
+                <a className="text-primary hover:underline">Terms of Service</a> and{" "}
+                <a className="text-primary hover:underline">Privacy Policy</a>.
               </p>
             </div>
           </CardFooter>
@@ -211,4 +192,4 @@ const GetApiKey = () => {
   );
 };
 
-export default GetApiKey;
+export default GetApiKey
