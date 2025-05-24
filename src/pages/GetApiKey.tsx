@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -65,7 +64,6 @@ const GetApiKey = () => {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("userId", localStorage.getItem("user_id") || "");
 
       const API_URL = import.meta.env.VITE_API_URL || "http://103.246.85.252:8000";
       const response = await fetch(`${API_URL}/process-image-and-store/`, {
@@ -74,18 +72,16 @@ const GetApiKey = () => {
         headers: {
           Accept: "application/json",
           Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          // ❌ DO NOT manually set Content-Type
         },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
+      console.log("Status:", response.status);
+      const result = await response.json().catch(() => null);
+      console.log("Response JSON:", result);
 
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.message || "Verification failed");
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.message || `HTTP error! Status: ${response.status}`);
       }
 
       setIsVerifying(false);
