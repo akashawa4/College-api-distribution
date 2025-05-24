@@ -59,15 +59,22 @@ const GetApiKey = () => {
     setIsVerifying(true);
     
     try {
-      // In a real app, upload to backend API for verification
-      // For demo purposes, we'll simulate API call with timeout
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('http://103.246.85.252:8000/process-image-and-store/', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Verification failed');
+      }
+
+      const result = await response.json();
       
       setIsVerifying(false);
       setIsLoading(true);
-      
-      // Simulate backend verification and API key generation
-      await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Store verification status
       localStorage.setItem("is_verified", "true");
